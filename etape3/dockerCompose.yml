@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  data:
+    image: mariadb:latest
+    container_name: data
+    environment:
+      MARIADB_ROOT_PASSWORD: password
+    volumes:
+      - ./bdd:/docker-entrypoint-initdb.d
+    networks:
+      - monreseau
+
+  script:
+    build: ./confPHP
+    container_name: script
+    volumes:
+      - ./monsite:/app
+    depends_on:
+      - data
+    networks:
+      - monreseau
+
+  http:
+    image: nginx:latest
+    container_name: http
+    ports:
+      - "8080:80"
+    volumes:
+      - ./config/default.conf:/etc/nginx/conf.d/default.conf
+      - ./monsite:/var/www/html
+    depends_on:
+      - script
+    networks:
+      - monreseau
+
+networks:
+  monreseau:
+    driver: bridge
